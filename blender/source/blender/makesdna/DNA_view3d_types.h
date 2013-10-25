@@ -131,6 +131,7 @@ typedef struct RegionView3D {
 	char viewlock;
 	char viewlock_quad;			/* options for quadview (store while out of quad view) */
 	char pad[3];
+	float ofs_lock[2];			/* normalized offset for locked view: (-1, -1) bottom left, (1, 1) upper right */
 
 	short twdrawflag;
 	short rflag;
@@ -223,8 +224,20 @@ typedef struct View3D {
 	/* XXX deprecated? */
 	struct bGPdata *gpd  DNA_DEPRECATED;		/* Grease-Pencil Data (annotation layers) */
 
+	 /* stereo */
+	short stereo_flag;
+	char stereo_camera;
+	char pad4;
+	short pad5, pad6;
+	float stereo_convergence_factor;
+	float pad7;
 } View3D;
 
+
+/* View3D->stereo_flag (short) */
+#define V3D_S3D_DISPCAMERAS		(1 << 0)
+#define V3D_S3D_DISPPLANES		(1 << 1)
+#define V3D_S3D_DISPVOLUME		(1 << 2)
 
 /* View3D->flag (short) */
 /*#define V3D_DISPIMAGE		1*/ /*UNUSED*/
@@ -280,6 +293,9 @@ typedef struct View3D {
 #define V3D_RENDER_BORDER		2048
 #define V3D_SOLID_MATCAP		4096	/* user flag */
 #define V3D_SHOW_SOLID_MATCAP	8192	/* runtime flag */
+#define V3D_OCCLUDE_WIRE		16384
+#define V3D_SHADELESS_TEX		32768
+#define V3D_SHOW_STEREOSCOPY 2
 
 /* View3D->around */
 #define V3D_CENTER		 0

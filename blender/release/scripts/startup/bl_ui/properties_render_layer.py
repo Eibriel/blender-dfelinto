@@ -57,7 +57,8 @@ class RENDERLAYER_PT_layers(RenderLayerButtonsPanel, Panel):
         rd = scene.render
 
         row = layout.row()
-        row.template_list("RENDERLAYER_UL_renderlayers", "", rd, "layers", rd.layers, "active_index", rows=2)
+        col = row.column()
+        col.template_list("RENDERLAYER_UL_renderlayers", "", rd, "layers", rd.layers, "active_index", rows=1)
 
         col = row.column(align=True)
         col.operator("scene.render_layer_add", icon='ZOOMIN', text="")
@@ -208,10 +209,13 @@ class RENDERLAYER_PT_views(RenderLayerButtonsPanel, Panel):
 
         rv = rd.views.active
 
-        row = layout.row()
-        row.prop(rv, "camera")
+        col = layout.column()
+        col.prop(rv, "camera")
 
-        row = layout.row()
+        if rv.camera and rv.camera.data.use_stereoscopy:
+            col.prop(rv, "stereoscopy_camera")
+
+        row = col.row()
         row.prop(rv, "use_custom_suffix")
         sub = row.row()
         sub.active = rv.use_custom_suffix
