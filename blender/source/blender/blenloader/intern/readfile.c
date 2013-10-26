@@ -9774,10 +9774,20 @@ static void do_versions(FileData *fd, Library *lib, Main *main)
 					SpaceLink *sl;
 
 					for (sl = sa->spacedata.first; sl; sl= sl->next) {
-						if (sl->spacetype == SPACE_VIEW3D) {
-							View3D *v3d = (View3D*) sl;
-							v3d->stereo_camera = STEREO_3D_ID;
-							v3d->flag2 |= V3D_SHOW_STEREOSCOPY;
+						switch (sl->spacetype) {
+							case SPACE_VIEW3D:
+							{
+								View3D *v3d = (View3D*) sl;
+								v3d->stereo_camera = STEREO_3D_ID;
+								v3d->flag2 |= V3D_SHOW_STEREOSCOPY;
+								break;
+							}
+							case SPACE_IMAGE:
+							{
+								SpaceImage *sima = (SpaceImage *) sl;
+								sima->iuser.flag |= IMA_SHOW_STEREO;
+								break;
+							}
 						}
 					}
 				}
