@@ -1671,7 +1671,7 @@ static void drawcamera(Scene *scene, View3D *v3d, RegionView3D *rv3d, Base *base
 	float vec[4][3], stereovec[4][3], asp[2], shift[2], scale[3];
 	int i;
 	float drawsize;
-	float convergence_distance, interocular_distance, plane_width, near_plane, far_plane, fov;
+	float convergence_distance, interocular_distance, cplane_width, plane_width, plane_height, near_plane, far_plane, fov;
 	const bool is_view = (rv3d->persp == RV3D_CAMOB && ob == v3d->camera);
 	MovieClip *clip = BKE_object_movieclip_get(scene, base->object, false);
 
@@ -1718,40 +1718,7 @@ static void drawcamera(Scene *scene, View3D *v3d, RegionView3D *rv3d, Base *base
 	glVertex3fv(vec[3]);
 	glEnd();
 
-    /* Stereo Convergence Distance */
-    
-    convergence_distance = cam->stereo.convergence_distance;
-    interocular_distance = cam->stereo.interocular_distance;
-    
-    fov = 2 * atan ( cam->sensor_x/cam->lens);
-    
-	plane_width = tan(fov*.5) * sqrt ((convergence_distance*convergence_distance));
-	
-	stereovec[0][0] = plane_width*.5 ;
-	stereovec[0][1] = plane_width*-.5 ;
-	stereovec[0][2] = -convergence_distance;
-	
-	stereovec[1][0] = plane_width*.5 ;
-	stereovec[1][1] = plane_width*.5 ;
-	stereovec[1][2] = -convergence_distance;
-	
-	stereovec[2][0] = plane_width*-.5 ;
-	stereovec[2][1] = plane_width*.5 ;
-	stereovec[2][2] = -convergence_distance;
-	
-	stereovec[3][0] = plane_width*-.5 ;
-	stereovec[3][1] = plane_width*-.5 ;
-	stereovec[3][2] = -convergence_distance;
-	
-	glBegin(GL_LINE_LOOP);
-	glVertex3fv(stereovec[0]);
-	glVertex3fv(stereovec[3]);
-	glVertex3fv(stereovec[1]);
-	glVertex3fv(stereovec[2]);
-	glVertex3fv(stereovec[0]);
-	glEnd();
-	
-	/* Stereo Interocular Distance */
+    /* Stereo Interocular Distance */
 	stereovec[0][0] = interocular_distance*-0.5 ;
 	stereovec[0][1] = 0 ;
 	stereovec[0][2] = 0 ;
@@ -1765,61 +1732,121 @@ static void drawcamera(Scene *scene, View3D *v3d, RegionView3D *rv3d, Base *base
 	glVertex3fv(stereovec[1]);
 	glEnd();
 	
+    /* Stereo Convergence Distance */
+    convergence_distance = cam->stereo.convergence_distance;
+    interocular_distance = cam->stereo.interocular_distance;
+    
+    fov = 2 * atan ( cam->sensor_x/cam->lens);
+	plane_width = tan(fov*.5) * sqrt ((convergence_distance*convergence_distance));
+	cplane_width = plane_width;
+	
+	fov = 2 * atan ( cam->sensor_y/cam->lens);
+	plane_height = tan(fov*.5) * sqrt ((convergence_distance*convergence_distance));
+	
+	stereovec[0][0] = plane_width*.5 ;
+	stereovec[0][1] = plane_height*-.5 ;
+	stereovec[0][2] = -convergence_distance;
+	
+	stereovec[1][0] = plane_width*.5 ;
+	stereovec[1][1] = plane_height*.5 ;
+	stereovec[1][2] = -convergence_distance;
+	
+	stereovec[2][0] = plane_width*-.5 ;
+	stereovec[2][1] = plane_height*.5 ;
+	stereovec[2][2] = -convergence_distance;
+	
+	stereovec[3][0] = plane_width*-.5 ;
+	stereovec[3][1] = plane_height*-.5 ;
+	stereovec[3][2] = -convergence_distance;
+	
+	glBegin(GL_LINE_LOOP);
+	glVertex3fv(stereovec[0]);
+	glVertex3fv(stereovec[1]);
+	glVertex3fv(stereovec[2]);
+	glVertex3fv(stereovec[3]);
+	glVertex3fv(stereovec[0]);
+	glEnd();
+	
+	stereovec[0][0] = plane_width*-.5 ;
+	stereovec[0][1] = 0 ;
+	stereovec[0][2] = -convergence_distance ;
+	
+	stereovec[1][0] = plane_width*.5 ;
+	stereovec[1][1] = 0 ;
+	stereovec[1][2] = -convergence_distance ;
+	
+	glBegin(GL_LINE_STRIP);
+	glVertex3fv(stereovec[0]);
+	glVertex3fv(stereovec[1]);
+	glEnd();
+	
 	/* Stereo Far Plane */
+	far_plane = (convergence_distance / interocular_distance) * ((cplane_width*.5)/100);
 	
-	far_plane = (convergence_distance / interocular_distance) * ((plane_width*.5)/100);
+	fov = 2 * atan ( cam->sensor_x/cam->lens);
+	plane_width = tan(fov*.5) * sqrt (((convergence_distance+far_plane)*(convergence_distance+far_plane)));
 	
-	stereovec[0][0] = .5 ;
-	stereovec[0][1] = -.5 ;
+	fov = 2 * atan ( cam->sensor_y/cam->lens);
+	plane_height = tan(fov*.5) * sqrt (((convergence_distance+far_plane)*(convergence_distance+far_plane)));
+	
+	stereovec[0][0] = plane_width*.5 ;
+	stereovec[0][1] = plane_height*-.5 ;
 	stereovec[0][2] = -convergence_distance-far_plane;
 	
-	stereovec[1][0] = .5 ;
-	stereovec[1][1] = .5 ;
+	stereovec[1][0] = plane_width*.5 ;
+	stereovec[1][1] = plane_height*.5 ;
 	stereovec[1][2] = -convergence_distance-far_plane;
 	
-	stereovec[2][0] = -.5 ;
-	stereovec[2][1] = .5 ;
+	stereovec[2][0] = plane_width*-.5 ;
+	stereovec[2][1] = plane_height*.5 ;
 	stereovec[2][2] = -convergence_distance-far_plane;
 	
-	stereovec[3][0] = -.5 ;
-	stereovec[3][1] = -.5 ;
+	stereovec[3][0] = plane_width*-.5 ;
+	stereovec[3][1] = plane_height*-.5 ;
 	stereovec[3][2] = -convergence_distance-far_plane;
 	
 	glBegin(GL_LINE_LOOP);
 	glVertex3fv(stereovec[0]);
-	glVertex3fv(stereovec[3]);
 	glVertex3fv(stereovec[1]);
 	glVertex3fv(stereovec[2]);
+	glVertex3fv(stereovec[3]);
 	glVertex3fv(stereovec[0]);
 	glEnd();
 	
 	/* Stereo Near Plane */
+	near_plane = (convergence_distance / interocular_distance) * ((cplane_width*.5)/50);
 	
-	near_plane = (convergence_distance / interocular_distance) * ((plane_width*.5)/50);
+	if (near_plane < convergence_distance) {
+	    fov = 2 * atan ( cam->sensor_x/cam->lens);
+	    plane_width = tan(fov*.5) * sqrt (((convergence_distance-near_plane)*(convergence_distance-near_plane)));
 	
-	stereovec[0][0] = .5 ;
-	stereovec[0][1] = -.5 ;
-	stereovec[0][2] = -convergence_distance+near_plane;
+	    fov = 2 * atan ( cam->sensor_y/cam->lens);
+	    plane_height = tan(fov*.5) * sqrt (((convergence_distance-near_plane)*(convergence_distance-near_plane)));
 	
-	stereovec[1][0] = .5 ;
-	stereovec[1][1] = .5 ;
-	stereovec[1][2] = -convergence_distance+near_plane;
+	    stereovec[0][0] = plane_width*.5 ;
+	    stereovec[0][1] = plane_height*-.5 ;
+	    stereovec[0][2] = -convergence_distance+near_plane;
 	
-	stereovec[2][0] = -.5 ;
-	stereovec[2][1] = .5 ;
-	stereovec[2][2] = -convergence_distance+near_plane;
+	    stereovec[1][0] = plane_width*.5 ;
+	    stereovec[1][1] = plane_height*.5 ;
+	    stereovec[1][2] = -convergence_distance+near_plane;
 	
-	stereovec[3][0] = -.5 ;
-	stereovec[3][1] = -.5 ;
-	stereovec[3][2] = -convergence_distance+near_plane;
+	    stereovec[2][0] = plane_width*-.5 ;
+	    stereovec[2][1] = plane_height*.5 ;
+	    stereovec[2][2] = -convergence_distance+near_plane;
 	
-	glBegin(GL_LINE_LOOP);
-	glVertex3fv(stereovec[0]);
-	glVertex3fv(stereovec[3]);
-	glVertex3fv(stereovec[1]);
-	glVertex3fv(stereovec[2]);
-	glVertex3fv(stereovec[0]);
-	glEnd();
+	    stereovec[3][0] = plane_width*-.5 ;
+	    stereovec[3][1] = plane_height*-.5 ;
+	    stereovec[3][2] = -convergence_distance+near_plane;
+	
+	    glBegin(GL_LINE_LOOP);
+	    glVertex3fv(stereovec[0]);
+	    glVertex3fv(stereovec[1]);
+	    glVertex3fv(stereovec[2]);
+	    glVertex3fv(stereovec[3]);
+	    glVertex3fv(stereovec[0]);
+	    glEnd();
+	}
 	
 	
 	if (is_view)
