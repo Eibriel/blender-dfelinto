@@ -386,8 +386,7 @@ static bool wm_stereo_required(bScreen *screen)
 
 			if (sl->spacetype == SPACE_VIEW3D) {
 				View3D *v3d = (View3D*) sl;
-				if ((v3d->flag2 & V3D_SHOW_STEREOSCOPY) &&
-				    (v3d->stereo_camera == STEREO_3D_ID))
+				if (v3d->stereo_camera == STEREO_3D_ID)
 					return TRUE;
 			}
 			if (sl->spacetype == SPACE_IMAGE) {
@@ -405,10 +404,6 @@ static bool wm_stereo_required(bScreen *screen)
 bool WM_stereo_enabled(wmWindow *win)
 {
 	bScreen *screen = win->screen;
-
-	/* the per-window stereo setting is a way to disable the 3D momentaneously */
-	if ((win->flag & WM_STEREO) == 0)
-		return FALSE;
 
 	if (wm_stereo_required(screen) == FALSE)
 		return FALSE;
@@ -431,9 +426,6 @@ int wm_stereo_toggle_exec(bContext *C, wmOperator *op)
 	/* FullScreen or Normal */
 	state = GHOST_GetWindowState(win->ghostwin);
 
-	/* toggle per window stereo setting */
-	win->flag ^= WM_STEREO;
-
 	/* pagelfip requires a new window to be created with the proper OS flags */
 	if (U.stereo_display == S3D_DISPLAY_PAGEFLIP) {
 		if (wm_window_duplicate_exec(C, op) == OPERATOR_FINISHED) {
@@ -447,10 +439,8 @@ int wm_stereo_toggle_exec(bContext *C, wmOperator *op)
 	}
 
 	if (wm_stereo_need_fullscreen(U.stereo_display)) {
-		if ((win->flag & WM_STEREO)) {
-			if (state != GHOST_kWindowStateFullScreen)
-				GHOST_SetWindowState(win->ghostwin, GHOST_kWindowStateFullScreen);
-		}
+		if (state != GHOST_kWindowStateFullScreen)
+			GHOST_SetWindowState(win->ghostwin, GHOST_kWindowStateFullScreen);
 	}
 
 	WM_event_add_notifier(C, NC_WINDOW, NULL);

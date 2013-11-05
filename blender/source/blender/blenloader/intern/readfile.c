@@ -5086,7 +5086,6 @@ static void lib_link_scene(FileData *fd, Main *main)
 	Base *base, *next;
 	Sequence *seq;
 	SceneRenderLayer *srl;
-	SceneRenderView *srv;
 	TimeMarker *marker;
 	FreestyleModuleConfig *fmc;
 	FreestyleLineSet *fls;
@@ -5212,10 +5211,6 @@ static void lib_link_scene(FileData *fd, Main *main)
 					fls->linestyle = newlibadr_us(fd, sce->id.lib, fls->linestyle);
 					fls->group = newlibadr_us(fd, sce->id.lib, fls->group);
 				}
-			}
-
-			for (srv = sce->r.views.first; srv; srv = srv->next) {
-				srv->camera = newlibadr_us(fd, sce->id.lib, srv->camera);
 			}
 
 			/*Game Settings: Dome Warp Text*/
@@ -9789,7 +9784,6 @@ static void do_versions(FileData *fd, Library *lib, Main *main)
 
 	{
 		Scene *scene;
-		bScreen *screen;
 		SceneRenderView *srv;
 		Camera *cam;
 
@@ -9797,32 +9791,11 @@ static void do_versions(FileData *fd, Library *lib, Main *main)
 			for (scene = main->scene.first; scene; scene = scene->id.next) {
 				BKE_scene_add_render_view(scene, STEREO_LEFT_NAME);
 				srv = (SceneRenderView *)scene->r.views.first;
-				srv->viewflag |= SCE_VIEW_CUSTOMSUFFIX;
 				BLI_strncpy(srv->suffix, "_L", sizeof(srv->suffix));
-				srv->stereo_camera = STEREO_LEFT_ID;
-				srv->camera = scene->camera;
 
 				BKE_scene_add_render_view(scene, STEREO_RIGHT_NAME);
 				srv = (SceneRenderView *)scene->r.views.last;
-				srv->viewflag |= SCE_VIEW_CUSTOMSUFFIX;
 				BLI_strncpy(srv->suffix, "_R", sizeof(srv->suffix));
-				srv->stereo_camera = STEREO_RIGHT_ID;
-				srv->camera = scene->camera;
-			}
-
-			for (screen = main->screen.first; screen; screen = screen->id.next) {
-				ScrArea *sa;
-				for (sa = screen->areabase.first; sa; sa = sa->next) {
-					SpaceLink *sl;
-
-					for (sl = sa->spacedata.first; sl; sl= sl->next) {
-						if (sl->spacetype == SPACE_VIEW3D) {
-							View3D *v3d = (View3D*) sl;
-							v3d->stereo_camera = STEREO_3D_ID;
-							v3d->flag2 |= V3D_SHOW_STEREOSCOPY;
-						}
-					}
-				}
 			}
 		}
 
@@ -10822,7 +10795,6 @@ static void expand_scene(FileData *fd, Main *mainvar, Scene *sce)
 {
 	Base *base;
 	SceneRenderLayer *srl;
-	SceneRenderView *srv;
 	FreestyleModuleConfig *module;
 	FreestyleLineSet *lineset;
 	
@@ -10854,10 +10826,6 @@ static void expand_scene(FileData *fd, Main *mainvar, Scene *sce)
 				expand_doit(fd, mainvar, lineset->group);
 			expand_doit(fd, mainvar, lineset->linestyle);
 		}
-	}
-	
-	for (srv = sce->r.views.first; srv; srv = srv->next) {
-		expand_doit(fd, mainvar, srv->camera);
 	}
 
 	if (sce->r.dometext)

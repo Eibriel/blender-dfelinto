@@ -596,27 +596,7 @@ int BKE_camera_view_frame_fit_to_scene(Scene *scene, struct View3D *v3d, Object 
 	}
 }
 
-/* return the eye (left/right/center) for the given view
-   actview is numbered from a list of the active SceneRenderViews only */
-StereoViews BKE_getStereoView(RenderData *rd, int actview) {
-	SceneRenderView *srv;
-	int view_id;
-
-	/* check renderdata for amount of views */
-	view_id = 0;
-	for (srv= (SceneRenderView *) rd->views.first; srv; srv = srv->next) {
-
-		if (srv->viewflag & SCE_VIEW_DISABLE)
-			continue;
-
-		if (actview == view_id++)
-			return srv->stereo_camera;
-	}
-
-	return STEREO_CENTER_ID;
-}
-
-static void camera_stereo_matrices(Object *camera, float viewmat[4][4], float *shift, bool left)
+void BKE_camera_stereo_matrices(Object *camera, float viewmat[4][4], float *shift, bool left)
 {
 	/* viewmat = MODELVIEW_MATRIX */
 	Camera *data = (Camera *)camera->data;
@@ -673,21 +653,9 @@ static void camera_stereo_matrices(Object *camera, float viewmat[4][4], float *s
 	}
 }
 
-void BKE_camera_stereo_matrix_shift(Object *camera, float viewmat[4][4], float *shift, StereoViews view)
+Object *BKE_camera_multiview_advanced(RenderData *rd, Object *camera, const char *suffix)
 {
-	/* set the modelview matrix and return the new camera shift */
-	*shift = ((Camera *)camera->data)->shiftx;
-
-	switch (view) {
-		case STEREO_LEFT_ID:
-			camera_stereo_matrices(camera, viewmat, shift, TRUE);
-			break;
-		case STEREO_RIGHT_ID:
-			camera_stereo_matrices(camera, viewmat, shift, FALSE);
-			break;
-		/* case STEREO_CENTER_ID: */
-		default:
-			break;
-	}
+	//XXX MV return the camera for the view given the suffix
+	return camera;
 }
 
