@@ -30,15 +30,18 @@
  */
 
 #include <stdlib.h>
+#include <stddef.h>
 
 #include "DNA_camera_types.h"
 #include "DNA_lamp_types.h"
 #include "DNA_object_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_view3d_types.h"
+#include "DNA_ID.h"
 
 #include "BLI_math.h"
 #include "BLI_utildefines.h"
+#include "BLI_string.h"
 
 #include "BKE_animsys.h"
 #include "BKE_camera.h"
@@ -596,27 +599,7 @@ int BKE_camera_view_frame_fit_to_scene(Scene *scene, struct View3D *v3d, Object 
 	}
 }
 
-/* return the eye (left/right/center) for the given view
-   actview is numbered from a list of the active SceneRenderViews only */
-StereoViews BKE_getStereoView(RenderData *rd, int actview) {
-	SceneRenderView *srv;
-	int view_id;
-
-	/* check renderdata for amount of views */
-	view_id = 0;
-	for (srv= (SceneRenderView *) rd->views.first; srv; srv = srv->next) {
-
-		if (srv->viewflag & SCE_VIEW_DISABLE)
-			continue;
-
-		if (actview == view_id++)
-			return srv->stereo_camera;
-	}
-
-	return STEREO_CENTER_ID;
-}
-
-static void camera_stereo_matrices(Object *camera, float viewmat[4][4], float *shift, bool left)
+void BKE_camera_stereo_matrices(Object *camera, float viewmat[4][4], float *shift, bool left)
 {
 	/* viewmat = MODELVIEW_MATRIX */
 	Camera *data = (Camera *)camera->data;
@@ -673,21 +656,38 @@ static void camera_stereo_matrices(Object *camera, float viewmat[4][4], float *s
 	}
 }
 
-void BKE_camera_stereo_matrix_shift(Object *camera, float viewmat[4][4], float *shift, StereoViews view)
+Object *BKE_camera_multiview_advanced(Scene *scene, RenderData *rd, Object *camera, const char *suffix)
 {
-	/* set the modelview matrix and return the new camera shift */
-	*shift = ((Camera *)camera->data)->shiftx;
+	SceneRenderView *srv;
+	char name[MAX_NAME];
+	int len_name, len_suffix;
 
-	switch (view) {
-		case STEREO_LEFT_ID:
-			camera_stereo_matrices(camera, viewmat, shift, TRUE);
+	len_name = BLI_strnlen(camera->id.name, sizeof(camera->id.name));
+
+	for (srv = rd->views.first; srv; srv = srv->next)
+	{
+		len_suffix = BLI_strnlen(srv->suffix, sizeof(srv->suffix));
+
+		if (len_name < len_suffix)
+			continue;
+
+		if (strcmp(camera->id.name + (len_name - len_suffix), srv->suffix) == 0) {
+			BLI_snprintf(name, sizeof(name), "%.*s%s", (len_name - len_suffix), camera->id.name, suffix);
 			break;
-		case STEREO_RIGHT_ID:
-			camera_stereo_matrices(camera, viewmat, shift, FALSE);
-			break;
-		/* case STEREO_CENTER_ID: */
-		default:
-			break;
+		}
 	}
+
+	if (name[0] != '\0') {
+		Base *base;
+		Object *ob;
+		for (base = scene->base.first; base; base = base->next) {
+			ob = base->object;
+			if (strcmp(ob->id.name, name) == 0) {
+				return ob;
+			}
+		}
+	}
+
+	return camera;
 }
 

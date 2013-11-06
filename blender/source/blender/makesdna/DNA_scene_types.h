@@ -252,15 +252,12 @@ typedef struct SceneRenderView {
 
 	int viewflag;
 	int pad[2];
-	char stereo_camera; //toremove
-	char pad2[3];
+	char pad2[4];
 
-	struct Object *camera;//toremove
 } SceneRenderView;
 
 /* srv->viewflag */
 #define SCE_VIEW_DISABLE		(1<<0)
-#define SCE_VIEW_CUSTOMSUFFIX	(1<<1)
 
 /* scene.render.views_setup */
 enum {
@@ -780,8 +777,7 @@ typedef struct GameData {
 typedef enum StereoViews {
 	STEREO_LEFT_ID = 0,
 	STEREO_RIGHT_ID = 1,
-	STEREO_CENTER_ID = 2,
-	STEREO_3D_ID = 3,
+	STEREO_3D_ID = 2,
 } StereoViews;
 
 /* Markers */
