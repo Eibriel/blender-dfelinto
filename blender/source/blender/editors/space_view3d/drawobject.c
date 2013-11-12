@@ -1781,7 +1781,7 @@ static void drawcamera(Scene *scene, View3D *v3d, RegionView3D *rv3d, Base *base
 	glEnd();
 	
 	/* Stereo Far Plane */
-	far_plane = (convergence_distance / interocular_distance) * ((cplane_width*.5)/100);
+	far_plane = (convergence_distance / interocular_distance) * ((cplane_width*.5)/50);
 	
 	fov = 2 * atan ( cam->sensor_x/cam->lens);
 	plane_width = tan(fov*.5) * sqrt (((convergence_distance+far_plane)*(convergence_distance+far_plane)));
@@ -1814,7 +1814,7 @@ static void drawcamera(Scene *scene, View3D *v3d, RegionView3D *rv3d, Base *base
 	glEnd();
 	
 	/* Stereo Near Plane */
-	near_plane = (convergence_distance / interocular_distance) * ((cplane_width*.5)/50);
+	near_plane = (convergence_distance / interocular_distance) * ((cplane_width*.5)/100);
 	
 	if (near_plane < convergence_distance) {
 	    fov = 2 * atan ( cam->sensor_x/cam->lens);
